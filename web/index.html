@@ -30,6 +30,12 @@
   .temp{font-size:clamp(56px,14vw,96px);font-weight:300;line-height:1;margin:6px 0}
   .desc{font-size:17px}
   .meta{color:var(--dim);font-size:13px;margin-top:6px}
+  .hourly{margin:0 0 28px;text-align:left}
+  .hourly h2{font-size:15px;font-weight:500}
+  .hours{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px}
+  .hour{flex:0 0 90px;border:1px solid var(--line);border-radius:14px;padding:12px 6px;text-align:center;font-size:13px}
+  .hour b,.hour span{display:block;margin-bottom:6px}
+  .hour small{color:var(--dim)}
   .days{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;text-align:center}
   .day{border:1px solid var(--line);border-radius:14px;padding:12px 6px;font-size:13px}
   .day b{display:block;font-weight:500;margin-bottom:6px}
@@ -96,6 +102,10 @@ function fit(){i.style.transform='scale('+(i.parentNode.clientWidth/i.offsetWidt
     <div class="meta" id="meta"></div>
   </section>
 
+  <section class="hourly" id="hourly" hidden aria-labelledby="hourly-title">
+    <h2 id="hourly-title">Today by hour · local time</h2>
+    <div class="hours" id="hours" tabindex="0" role="region" aria-label="Hourly forecast"></div>
+  </section>
   <div class="days" id="days"></div>
 </main>
 
@@ -118,7 +128,7 @@ async function geocode(name){
 }
 async function load(p){
   last=p; localStorage.setItem('place',JSON.stringify(p)); say('Loading…');
-  const u=`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
+  const u=`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
   const j=await (await fetch(u)).json(); render(p,j); say('');
 }
 function render(p,j){
@@ -126,6 +136,13 @@ function render(p,j){
   $('now').hidden=false; $('place').textContent=p.name; $('temp').textContent=t(c.temperature_2m);
   $('desc').textContent=CODES[c.weather_code]||'—';
   $('meta').textContent=`Feels like ${t(c.apparent_temperature)} · Wind ${Math.round(c.wind_speed_10m)} km/h · Humidity ${c.relative_humidity_2m}%`;
+  const h=j.hourly;
+  const today=c.time.slice(0,10);
+  const hours=(h?.time||[]).map((time,i)=>({time,i})).filter(x=>x.time.slice(0,10)===today);
+  $('hourly').hidden=!hours.length;
+  $('hours').innerHTML=hours.map(({time,i})=>`<div class="hour"><b>${time.slice(11,16)}</b>
+    <span>${Number.isFinite(h.temperature_2m[i])?t(h.temperature_2m[i]):'—'}</span>
+    <small>${CODES[h.weather_code[i]]||'—'}<br>${Number.isFinite(h.precipitation_probability[i])?h.precipitation_probability[i]+'% precipitation':'Precipitation unavailable'}</small></div>`).join('');
   $('days').innerHTML=j.daily.time.map((d,i)=>`<div class="day"><b>${i?new Date(d+'T12:00').toLocaleDateString(undefined,{weekday:'short'}):'Today'}</b>
     <span class="hi">${t(j.daily.temperature_2m_max[i])}</span> <span class="lo">${t(j.daily.temperature_2m_min[i])}</span>
     <div class="d">${CODES[j.daily.weather_code[i]]||''}</div></div>`).join('');
