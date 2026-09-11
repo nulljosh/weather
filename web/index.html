@@ -75,16 +75,6 @@
 <main>
   <h1>The forecast, and nothing else</h1>
   <p class="sub">Your city, today and the week ahead. No account, no ads, no app to install.</p>
-<div class="demo">
-  <div class="device device-iphone" id="demoFrame" data-title="Weather"><div class="device-screen"><iframe id="demoApp" title="Weather, live" loading="lazy" data-src="./?embed"></iframe></div></div>
-  <p class="demo-caption">This is the <span id="demoDev">iPhone</span> app, live. Try it.</p>
-</div>
-<script>
-(function(){var names={iphone:'iPhone',android:'Android',mac:'Mac',windows:'Windows'},dev=document.documentElement.dataset.device,f=document.getElementById('demoFrame'),i=document.getElementById('demoApp');
-if(!names[dev])dev='iphone';f.className='device device-'+dev;document.getElementById('demoDev').textContent=names[dev];
-if(!document.documentElement.classList.contains('embed'))i.src=i.dataset.src;
-function fit(){i.style.transform='scale('+(i.parentNode.clientWidth/i.offsetWidth)+')';}fit();addEventListener('resize',fit);})();
-</script>
 
   <form id="tool" role="search">
     <input type="search" id="q" placeholder="City" aria-label="City" autocomplete="off">
